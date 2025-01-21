@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الحساسات</title>
+    <title>jلوحة تحكم الحساسات</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -53,7 +55,7 @@
     </div>
 
     <script>
-        // Firebase الإعدادات
+        // إعدادات Firebase
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
@@ -65,10 +67,10 @@
         };
 
         // تهيئة Firebase
-        firebase.initializeApp(firebaseConfig);
+        const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // جلب البيانات من Firebase
+        // العناصر لعرض البيانات
         const temperatureEl = document.getElementById("temperature");
         const humidityEl = document.getElementById("humidity");
         const ldrEl = document.getElementById("ldr");
@@ -131,8 +133,9 @@
             },
         });
 
-        // التحديث عند تغير البيانات
-        database.ref("/sensors").on("value", (snapshot) => {
+        // جلب البيانات من Firebase وتحديث الصفحة
+        const sensorsRef = database.ref("sensors");
+        sensorsRef.on("value", (snapshot) => {
             const data = snapshot.val();
             const now = new Date().toLocaleTimeString();
 
