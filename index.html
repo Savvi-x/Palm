@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>jلوحة تحكم الحساسات</title>
+    <title>لوحة تحكم الحساسات</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -36,6 +36,13 @@
             text-align: center;
             margin: 20px 0;
         }
+        .sensor-data p {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        canvas {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -45,7 +52,7 @@
     <div class="container">
         <div class="sensor-data">
             <p>درجة الحرارة: <span id="temperature">--</span>°C</p>
-            <p>الرطوبرة: <span id="humidity">--</span>%</p>
+            <p>الرطوبة: <span id="humidity">--</span>%</p>
             <p>الإضاءة: <span id="ldr">--</span>%</p>
             <p>رطوبة التربة: <span id="soil">--</span>%</p>
         </div>
@@ -57,20 +64,21 @@
     <script>
         // إعدادات Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "https://savvix1-c50d1-default-rtdb.firebaseio.com/",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyA3JIio-a0mIWpcKuzQ3IxuvhC5eIfHY8o",
+            authDomain: "savvix1-c50d1.firebaseapp.com",
+            databaseURL: "https://savvix1-c50d1-default-rtdb.firebaseio.com",
+            projectId: "savvix1-c50d1",
+            storageBucket: "savvix1-c50d1.appspot.com",
+            messagingSenderId: "1001065442748",
+            appId: "1:1001065442748:web:1ba24f4ceb8d2881d68fb9",
+            measurementId: "G-X1FDWVDF0N"
         };
 
         // تهيئة Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // العناصر لعرض البيانات
+        // عناصر عرض البيانات
         const temperatureEl = document.getElementById("temperature");
         const humidityEl = document.getElementById("humidity");
         const ldrEl = document.getElementById("ldr");
