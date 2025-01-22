@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تحسين جودة الثمار</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,32 +29,24 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .sensor-data {
-            display: flex;
-            justify-content: space-around;
+        .video-container {
             margin: 20px 0;
         }
-        .sensor-box {
-            background-color: #f1f1f1;
+        video {
+            width: 80%;
+            max-width: 400px;
             border-radius: 10px;
-            padding: 20px;
-            width: 150px;
-            text-align: center;
-            font-size: 18px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .notifications {
+        .results {
             margin-top: 20px;
-            color: #ff5722;
             font-size: 18px;
+            color: #333;
         }
-        canvas {
+        .improvement {
             margin-top: 20px;
-        }
-        footer {
-            margin-top: 30px;
-            font-size: 14px;
-            color: #888;
+            font-size: 16px;
+            color: #555;
         }
     </style>
 </head>
@@ -62,124 +56,73 @@
     </header>
 
     <div class="container">
-        <h2>قراءة الحساسات</h2>
-        <div class="sensor-data">
-            <div class="sensor-box">
-                <strong>الرطوبة:</strong>
-                <div id="humidity">--%</div>
-            </div>
-            <div class="sensor-box">
-                <strong>درجة الحرارة:</strong>
-                <div id="temperature">--°C</div>
-            </div>
-            <div class="sensor-box">
-                <strong>رطوبة التربة:</strong>
-                <div id="soil">--%</div>
-            </div>
-            <div class="sensor-box">
-                <strong>الضوء:</strong>
-                <div id="ldr">--</div>
-            </div>
+        <h2>التعرف على النباتات</h2>
+        <div class="video-container">
+            <video id="webcam" autoplay playsinline></video>
         </div>
-
-        <div class="notifications" id="notifications">
-            <!-- تنبيهات ستظهر هنا -->
+        <button onclick="predict()">التعرف على النبتة</button>
+        <div class="results">
+            <p id="prediction">نتيجة التعرف: --</p>
         </div>
-
-        <h2>رسم بياني</h2>
-        <canvas id="sensorChart" width="800" height="400"></canvas>
+        <div class="improvement" id="improvement">
+            <!-- طرق تحسين الجودة ستظهر هنا -->
+        </div>
     </div>
 
-    <footer>
-        جميع الحقوق محفوظة © 2025 تحسين جودة الثمار
-    </footer>
-
     <script type="module">
-        // استيراد مكتبات Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+        // رابط نموذج Teachable Machine
+        const modelURL = "https://raw.githubusercontent.com/Savvi-x/Palm/refs/heads/main/model.json  ";
+        const metadataURL = "https://raw.githubusercontent.com/Savvi-x/Palm/refs/heads/main/metadata.json";
 
-        // إعدادات Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyA3JIio-a0mIWpcKuzQ3IxuvhC5eIfHY8o",
-            authDomain: "savvix1-c50d1.firebaseapp.com",
-            databaseURL: "https://savvix1-c50d1-default-rtdb.firebaseio.com",
-            projectId: "savvix1-c50d1",
-            storageBucket: "savvix1-c50d1.firebasestorage.app",
-            messagingSenderId: "1001065442748",
-            appId: "1:1001065442748:web:eaf4d2c753724a20d68fb9",
-            measurementId: "G-8TYVZ75E9X"
-        };
+        let model, webcam;
 
-        // تهيئة Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+        // تحميل النموذج
+        async function loadModel() {
+            model = await tmImage.load(modelURL, metadataURL);
+            console.log("تم تحميل النموذج بنجاح!");
+            initWebcam();
+        }
 
-        // مرجع إلى بيانات المستشعرات
-        const sensorsRef = ref(database, "sensors");
+        // تهيئة الكاميرا
+        async function initWebcam() {
+            webcam = new tmImage.Webcam(400, 400, true); // إعداد الكاميرا
+            await webcam.setup();
+            await webcam.play();
+            document.getElementById("webcam").appendChild(webcam.canvas);
+            window.requestAnimationFrame(loop);
+        }
 
-        // تخزين البيانات للرسم البياني
-        const timestamps = [];
-        const humidityData = [];
-        const temperatureData = [];
+        // حلقة تشغيل الكاميرا
+        async function loop() {
+            webcam.update();
+            window.requestAnimationFrame(loop);
+        }
 
-        // رسم القيم باستخدام Chart.js
-        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const sensorChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: timestamps,
-                datasets: [
-                    {
-                        label: 'الرطوبة',
-                        borderColor: 'blue',
-                        data: humidityData
-                    },
-                    {
-                        label: 'درجة الحرارة',
-                        borderColor: 'red',
-                        data: temperatureData
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        title: { display: true, text: 'الزمن' }
-                    },
-                    y: {
-                        title: { display: true, text: 'القيمة' }
-                    }
-                }
-            }
-        });
+        // التنبؤ باستخدام النموذج
+        async function predict() {
+            const predictions = await model.predict(webcam.canvas);
+            const topPrediction = predictions.sort((a, b) => b.probability - a.probability)[0];
+            document.getElementById("prediction").textContent = `نتيجة التعرف: ${topPrediction.className}`;
 
-        // تحديث القيم من قاعدة البيانات
-        onValue(sensorsRef, (snapshot) => {
-            const data = snapshot.val();
-            document.getElementById('humidity').textContent = data.humidity + '%';
-            document.getElementById('temperature').textContent = data.temperature + '°C';
-            document.getElementById('soil').textContent = data.soil + '%';
-            document.getElementById('ldr').textContent = data.ldr;
+            // عرض طرق تحسين الجودة
+            const improvementTips = getImprovementTips(topPrediction.className);
+            document.getElementById("improvement").textContent = improvementTips;
+        }
 
-            // إضافة تنبيهات إذا تجاوزت القيم الحد
-            const notifications = document.getElementById('notifications');
-            notifications.innerHTML = ''; // مسح التنبيهات القديمة
-            if (data.humidity > 80) {
-                notifications.innerHTML += '⚠️ الرطوبة مرتفعة جدًا!<br>';
-            }
-            if (data.temperature > 35) {
-                notifications.innerHTML += '⚠️ درجة الحرارة مرتفعة جدًا!<br>';
-            }
+        // نصائح لتحسين الجودة بناءً على نوع النبتة
+        function getImprovementTips(plant) {
+            const tips = {
+                "النخيل": "1. تأكد من جودة المياه المستخدمة في الري. 2. أضف سمادًا مناسبًا غنيًا بالبوتاسيوم. 3. قم بإزالة الأوراق الجافة بانتظام.",
+                "البرتقال": "1. حافظ على رطوبة التربة بشكل مناسب. 2. أضف سمادًا غنيًا بالنيتروجين لتحفيز النمو. 3. قم بحماية الشجرة من الآفات.",
+                "البطيخ": "1. تأكد من أن التربة جيدة التصريف. 2. اسق النبات بانتظام خلال فترة النمو. 3. حافظ على تعرض النبات للشمس.",
+                "الموز": "1. حافظ على رطوبة التربة. 2. أضف سمادًا غنيًا بالفوسفور لتحسين جودة الفاكهة. 3. قم بحماية الشجرة من الرياح القوية.",
+                "غير معروف": "يرجى محاولة التقاط صورة أوضح للنبتة."
+            };
+            return tips[plant] || "لا توجد معلومات متاحة لتحسين هذه النبتة.";
+        }
 
-            // تحديث الرسم البياني
-            const now = new Date().toLocaleTimeString();
-            timestamps.push(now);
-            humidityData.push(data.humidity);
-            temperatureData.push(data.temperature);
-            sensorChart.update();
-        });
+        // تحميل النموذج وتشغيل الكاميرا
+        loadModel();
     </script>
 </body>
 </html>
