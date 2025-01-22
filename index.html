@@ -1,164 +1,186 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الحساسات</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
+    <title>تحسين جودة الثمار</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f9;
+            text-align: center;
         }
         header {
-            background-color: #4CAF50;
+            background-color: #4caf50;
             color: white;
-            text-align: center;
-            padding: 10px 0;
+            padding: 20px;
+            font-size: 24px;
         }
         .container {
-            max-width: 800px;
             margin: 20px auto;
-            padding: 20px;
+            max-width: 900px;
             background: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
             border-radius: 10px;
-        }
-        .chart-container {
-            position: relative;
-            height: 300px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .sensor-data {
-            text-align: center;
+            display: flex;
+            justify-content: space-around;
             margin: 20px 0;
+        }
+        .sensor-box {
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            padding: 20px;
+            width: 150px;
+            text-align: center;
+            font-size: 18px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .notifications {
+            margin-top: 20px;
+            color: #ff5722;
+            font-size: 18px;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+        footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #888;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>لوحة تحكم الحساسات</h1>
+        تحسين جودة الثمار
     </header>
+
     <div class="container">
+        <button class="button" onclick="window.location.href='https://savvi-x.github.io/Palm/page2.html';">التعرف على النبات</button>
+        <button class="button" onclick="window.location.href='https://savvi-x.github.io/Palm/page2.html';">التعرف على النبات</button>
+        <h2>قراءة الحساسات</h2>
         <div class="sensor-data">
-            <p>درجة الحرارة: <span id="temperature">--</span>°C</p>
-            <p>الرطوبة: <span id="humidity">--</span>%</p>
-            <p>الإضاءة: <span id="ldr">--</span>%</p>
-            <p>رطوبة التربة: <span id="soil">--</span>%</p>
+            <div class="sensor-box">
+                <strong>الرطوبة:</strong>
+                <div id="humidity">--%</div>
+            </div>
+            <div class="sensor-box">
+                <strong>درجة الحرارة:</strong>
+                <div id="temperature">--°C</div>
+            </div>
+            <div class="sensor-box">
+                <strong>رطوبة التربة:</strong>
+                <div id="soil">--%</div>
+            </div>
+            <div class="sensor-box">
+                <strong>الضوء:</strong>
+                <div id="ldr">--</div>
+            </div>
         </div>
-        <div class="chart-container">
-            <canvas id="sensorChart"></canvas>
+
+        <div class="notifications" id="notifications">
+            <!-- تنبيهات ستظهر هنا -->
         </div>
+
+        <h2>رسم بياني</h2>
+        <canvas id="sensorChart" width="800" height="400"></canvas>
     </div>
 
-    <script>
+    <footer>
+        جميع الحقوق محفوظة © 2025 تحسين جودة الثمار
+    </footer>
+
+    <script type="module">
+        // استيراد مكتبات Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+
         // إعدادات Firebase
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "https://savvix1-c50d1-default-rtdb.firebaseio.com/",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyA3JIio-a0mIWpcKuzQ3IxuvhC5eIfHY8o",
+            authDomain: "savvix1-c50d1.firebaseapp.com",
+            databaseURL: "https://savvix1-c50d1-default-rtdb.firebaseio.com",
+            projectId: "savvix1-c50d1",
+            storageBucket: "savvix1-c50d1.firebasestorage.app",
+            messagingSenderId: "1001065442748",
+            appId: "1:1001065442748:web:eaf4d2c753724a20d68fb9",
+            measurementId: "G-8TYVZ75E9X"
         };
 
         // تهيئة Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
-        // العناصر لعرض البيانات
-        const temperatureEl = document.getElementById("temperature");
-        const humidityEl = document.getElementById("humidity");
-        const ldrEl = document.getElementById("ldr");
-        const soilEl = document.getElementById("soil");
+        // مرجع إلى بيانات المستشعرات
+        const sensorsRef = ref(database, "sensors");
 
-        const labels = [];
-        const temperatureData = [];
+        // تخزين البيانات للرسم البياني
+        const timestamps = [];
         const humidityData = [];
-        const ldrData = [];
-        const soilData = [];
+        const temperatureData = [];
 
-        const ctx = document.getElementById("sensorChart").getContext("2d");
+        // رسم القيم باستخدام Chart.js
+        const ctx = document.getElementById('sensorChart').getContext('2d');
         const sensorChart = new Chart(ctx, {
-            type: "line",
+            type: 'line',
             data: {
-                labels: labels,
+                labels: timestamps,
                 datasets: [
                     {
-                        label: "درجة الحرارة",
-                        data: temperatureData,
-                        borderColor: "red",
-                        fill: false,
+                        label: 'الرطوبة',
+                        borderColor: 'blue',
+                        data: humidityData
                     },
                     {
-                        label: "الرطوبة",
-                        data: humidityData,
-                        borderColor: "blue",
-                        fill: false,
-                    },
-                    {
-                        label: "الإضاءة",
-                        data: ldrData,
-                        borderColor: "yellow",
-                        fill: false,
-                    },
-                    {
-                        label: "رطوبة التربة",
-                        data: soilData,
-                        borderColor: "green",
-                        fill: false,
-                    },
-                ],
+                        label: 'درجة الحرارة',
+                        borderColor: 'red',
+                        data: temperatureData
+                    }
+                ]
             },
             options: {
                 responsive: true,
                 scales: {
                     x: {
-                        title: {
-                            display: true,
-                            text: "الوقت",
-                        },
+                        title: { display: true, text: 'الزمن' }
                     },
                     y: {
-                        title: {
-                            display: true,
-                            text: "القيم",
-                        },
-                    },
-                },
-            },
+                        title: { display: true, text: 'القيمة' }
+                    }
+                }
+            }
         });
 
-        // جلب البيانات من Firebase وتحديث الصفحة
-        const sensorsRef = database.ref("sensors");
-        sensorsRef.on("value", (snapshot) => {
+        // تحديث القيم من قاعدة البيانات
+        onValue(sensorsRef, (snapshot) => {
             const data = snapshot.val();
-            const now = new Date().toLocaleTimeString();
+            document.getElementById('humidity').textContent = data.humidity + '%';
+            document.getElementById('temperature').textContent = data.temperature + '°C';
+            document.getElementById('soil').textContent = data.soil + '%';
+            document.getElementById('ldr').textContent = data.ldr;
 
-            labels.push(now);
-            temperatureData.push(data.temperature);
-            humidityData.push(data.humidity);
-            ldrData.push(data.ldr);
-            soilData.push(data.soil);
-
-            if (labels.length > 10) {
-                labels.shift();
-                temperatureData.shift();
-                humidityData.shift();
-                ldrData.shift();
-                soilData.shift();
+            // إضافة تنبيهات إذا تجاوزت القيم الحد
+            const notifications = document.getElementById('notifications');
+            notifications.innerHTML = ''; // مسح التنبيهات القديمة
+            if (data.humidity > 80) {
+                notifications.innerHTML += '⚠️ الرطوبة مرتفعة جدًا!<br>';
+            }
+            if (data.temperature > 35) {
+                notifications.innerHTML += '⚠️ درجة الحرارة مرتفعة جدًا!<br>';
             }
 
+            // تحديث الرسم البياني
+            const now = new Date().toLocaleTimeString();
+            timestamps.push(now);
+            humidityData.push(data.humidity);
+            temperatureData.push(data.temperature);
             sensorChart.update();
-
-            temperatureEl.textContent = data.temperature;
-            humidityEl.textContent = data.humidity;
-            ldrEl.textContent = data.ldr;
-            soilEl.textContent = data.soil;
         });
     </script>
 </body>
