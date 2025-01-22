@@ -62,6 +62,15 @@
             margin-top: 10px;
             color: #555;
         }
+        .recommendation {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+            background-color: #eafbea;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -70,8 +79,9 @@
     <div class="container">
         <h2>تشغيل الكاميرا والتعرف</h2>
         <div id="webcam-container" class="video-container"></div>
-        <button class="button" type="button" onclick="init()">ابدأ</button>
+        <button class="button" type="button" onclick="init()">توصية</button>
         <div id="label-container" class="results"></div>
+        <div id="recommendation" class="recommendation"></div>
     </div>
 
     <script>
@@ -113,12 +123,30 @@
             const prediction = await model.predict(webcam.canvas);
             labelContainer.innerHTML = "";
 
-            prediction.forEach((p) => {
-                const label = document.createElement("div");
-                label.className = "label";
-                label.textContent = `${p.className}: ${(p.probability * 100).toFixed(2)}%`;
-                labelContainer.appendChild(label);
-            });
+            const topPrediction = prediction.reduce((prev, current) => 
+                (prev.probability > current.probability) ? prev : current);
+
+            const arabicLabels = {
+                "banana": "موز",
+                "orange": "برتقال",
+                "PalmTrees": "نخيل",
+                "watermelon": "بطيخ",
+                "Unknown": "غير معروف"
+            };
+
+            const recommendations = {
+                "موز": "1. تأكد من ري النبات بانتظام. 2. أضف سماد غني بالبوتاسيوم لتحسين جودة الثمار.",
+                "برتقال": "1. قم بتقليم الشجرة لتحفيز النمو. 2. حافظ على التربة رطبة ومتجددة.",
+                "نخيل": "1. استخدم مياه نظيفة للري. 2. قم بإزالة الأوراق الجافة بانتظام.",
+                "بطيخ": "1. وفر تربة جيدة التصريف. 2. اسقِ النبات بانتظام وتجنب الجفاف.",
+                "غير معروف": "يرجى تحسين زاوية الكاميرا أو استخدام صورة أوضح."
+            };
+
+            const arabicLabel = arabicLabels[topPrediction.className] || "غير معروف";
+            const recommendation = recommendations[arabicLabel] || "لا توجد توصيات حالياً.";
+
+            labelContainer.innerHTML = `<p>النبتة: ${arabicLabel}</p><p>الدقة: ${(topPrediction.probability * 100).toFixed(2)}%</p>`;
+            document.getElementById("recommendation").innerHTML = `<strong>توصية:</strong><br>${recommendation}`;
         }
     </script>
 </body>
