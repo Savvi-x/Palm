@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم الحساسات</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -52,9 +52,9 @@
     <div class="container">
         <div class="sensor-data">
             <p>درجة الحرارة: <span id="temperature">--</span>°C</p>
-            <p>الرطوبة: <span id="humidity">--</span>%</p>
-            <p>الإضاءة: <span id="ldr">--</span>%</p>
-            <p>رطوبة التربة: <span id="soil">--</span>%</p>
+            <p>الرطوبة: <span id="humidity">---</span>%</p>
+            <p>الإضاءة: <span id="ldr">---</span>%</p>
+            <p>رطوبة التربة: <span id="soil">---</span>%</p>
         </div>
         <div class="chart-container">
             <canvas id="sensorChart"></canvas>
