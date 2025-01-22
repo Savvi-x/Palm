@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Firebase Sensors Data</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database.js"></script>
 </head>
 <body>
     <h1>Sensor Data</h1>
-    <p>Humidity: <span id="humidity"></span></p>
+    <p>Humidityy: <span id="humidity"></span></p>
     <p>Temperature: <span id="temperature"></span></p>
     <p>Soil: <span id="soil"></span></p>
     <p>LDR: <span id="ldr"></span></p>
 
-    <script>
+    <script type="module">
+        // استيراد مكتبات Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-database.js";
+
         // إعدادات Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA3JIio-a0mIWpcKuzQ3IxuvhC5eIfHY8o",
@@ -28,15 +30,18 @@
         };
 
         // تهيئة Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const app = initializeApp(firebaseConfig);
+
+        // تهيئة قاعدة البيانات
+        const database = getDatabase(app);
 
         // مرجع إلى بيانات المستشعرات
-        const sensorsRef = database.ref("sensors");
+        const sensorsRef = ref(database, "sensors");
 
-        // قراءة البيانات
-        sensorsRef.on("value", (snapshot) => {
-            const data = snapshot.val(); // الحصول على جميع القيم
+        // قراءة البيانات من قاعدة البيانات
+        onValue(sensorsRef, (snapshot) => {
+            const data = snapshot.val();
+            console.log(data); // تأكد من أن البيانات تظهر في وحدة التحكم
             document.getElementById("humidity").textContent = data.humidity;
             document.getElementById("temperature").textContent = data.temperature;
             document.getElementById("soil").textContent = data.soil;
