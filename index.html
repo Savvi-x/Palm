@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تحسين جودة الثمار</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -48,6 +47,19 @@
             font-size: 16px;
             color: #555;
         }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -57,72 +69,77 @@
 
     <div class="container">
         <h2>التعرف على النباتات</h2>
-        <div class="video-container">
-            <video id="webcam" autoplay playsinline></video>
-        </div>
-        <button onclick="predict()">التعرف على النبتة</button>
-        <div class="results">
-            <p id="prediction">نتيجة التعرف: --</p>
-        </div>
-        <div class="improvement" id="improvement">
-            <!-- طرق تحسين الجودة ستظهر هنا -->
-        </div>
+        <div id="webcam-container"></div>
+        <div id="label-container" class="results"></div>
+        <div id="improvement" class="improvement"></div>
+        <button type="button" onclick="init()">بدء التعرف</button>
     </div>
 
-    <script type="module">
+    <script type="text/javascript">
         // رابط نموذج Teachable Machine
-        const modelURL = "https://raw.githubusercontent.com/Savvi-x/Palm/refs/heads/main/model.json  ";
-        const metadataURL = "https://raw.githubusercontent.com/Savvi-x/Palm/refs/heads/main/metadata.json";
+        const URL = "https://teachablemachine.withgoogle.com/models/SIp6Hs4f8/";
 
-        let model, webcam;
+        let model, webcam, labelContainer, maxPredictions;
 
-        // تحميل النموذج
-        async function loadModel() {
+        // تحميل النموذج وتهيئة الكاميرا
+        async function init() {
+            const modelURL = URL + "https://storage.googleapis.com/tm-model/SIp6Hs4f8/model.json";
+            const metadataURL = URL + "https://storage.googleapis.com/tm-model/SIp6Hs4f8/metadata.json";
+
+            // تحميل النموذج
             model = await tmImage.load(modelURL, metadataURL);
-            console.log("تم تحميل النموذج بنجاح!");
-            initWebcam();
-        }
+            maxPredictions = model.getTotalClasses();
 
-        // تهيئة الكاميرا
-        async function initWebcam() {
-            webcam = new tmImage.Webcam(400, 400, true); // إعداد الكاميرا
-            await webcam.setup();
+            // إعداد الكاميرا
+            const flip = true; // عكس الكاميرا لتعمل كمرآة
+            webcam = new tmImage.Webcam(300, 300, flip); // العرض، الطول، عكس
+            await webcam.setup(); // طلب إذن الكاميرا
             await webcam.play();
-            document.getElementById("webcam").appendChild(webcam.canvas);
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
             window.requestAnimationFrame(loop);
+
+            // إنشاء العناصر لعرض النتائج
+            labelContainer = document.getElementById("label-container");
+            labelContainer.innerHTML = ""; // إعادة تعيين النتائج السابقة
+            for (let i = 0; i < maxPredictions; i++) {
+                labelContainer.appendChild(document.createElement("div"));
+            }
         }
 
-        // حلقة تشغيل الكاميرا
         async function loop() {
-            webcam.update();
+            webcam.update(); // تحديث إطار الكاميرا
+            await predict();
             window.requestAnimationFrame(loop);
         }
 
-        // التنبؤ باستخدام النموذج
+        // تشغيل التنبؤ
         async function predict() {
-            const predictions = await model.predict(webcam.canvas);
-            const topPrediction = predictions.sort((a, b) => b.probability - a.probability)[0];
-            document.getElementById("prediction").textContent = `نتيجة التعرف: ${topPrediction.className}`;
+            const prediction = await model.predict(webcam.canvas);
+            const sortedPredictions = prediction.sort((a, b) => b.probability - a.probability);
 
-            // عرض طرق تحسين الجودة
+            // عرض النتيجة الأعلى
+            const topPrediction = sortedPredictions[0];
+            document.getElementById("label-container").innerHTML = `
+                <p>النبتة: ${topPrediction.className}</p>
+                <p>الدقة: ${(topPrediction.probability * 100).toFixed(2)}%</p>
+            `;
+
+            // عرض نصائح تحسين الجودة
             const improvementTips = getImprovementTips(topPrediction.className);
-            document.getElementById("improvement").textContent = improvementTips;
+            document.getElementById("improvement").innerHTML = `<strong>نصائح لتحسين الجودة:</strong><br>${improvementTips}`;
         }
 
-        // نصائح لتحسين الجودة بناءً على نوع النبتة
+        // نصائح بناءً على النبتة
         function getImprovementTips(plant) {
             const tips = {
-                "النخيل": "1. تأكد من جودة المياه المستخدمة في الري. 2. أضف سمادًا مناسبًا غنيًا بالبوتاسيوم. 3. قم بإزالة الأوراق الجافة بانتظام.",
-                "البرتقال": "1. حافظ على رطوبة التربة بشكل مناسب. 2. أضف سمادًا غنيًا بالنيتروجين لتحفيز النمو. 3. قم بحماية الشجرة من الآفات.",
-                "البطيخ": "1. تأكد من أن التربة جيدة التصريف. 2. اسق النبات بانتظام خلال فترة النمو. 3. حافظ على تعرض النبات للشمس.",
-                "الموز": "1. حافظ على رطوبة التربة. 2. أضف سمادًا غنيًا بالفوسفور لتحسين جودة الفاكهة. 3. قم بحماية الشجرة من الرياح القوية.",
-                "غير معروف": "يرجى محاولة التقاط صورة أوضح للنبتة."
+                "النخيل": "1. حافظ على ري منتظم ومعتدل. 2. أضف سماد غني بالبوتاسيوم. 3. قم بإزالة الأوراق الجافة.",
+                "البرتقال": "1. تأكد من تقليم الشجرة سنويًا. 2. استخدم سماد يحتوي على النيتروجين. 3. راقب الآفات بانتظام.",
+                "البطيخ": "1. حافظ على تصريف جيد للتربة. 2. اسق النبات بانتظام خلال فترات النمو. 3. وفر للنبات أشعة شمس كافية.",
+                "الموز": "1. تأكد من رطوبة التربة دائمًا. 2. قم بإضافة سماد غني بالفوسفور. 3. احمِ النبات من الرياح القوية.",
+                "غير معروف": "لا يمكن التعرف على النبتة. حاول التقاط صورة أوضح."
             };
-            return tips[plant] || "لا توجد معلومات متاحة لتحسين هذه النبتة.";
+            return tips[plant] || "لا توجد معلومات متاحة لهذه النبتة.";
         }
-
-        // تحميل النموذج وتشغيل الكاميرا
-        loadModel();
     </script>
 </body>
 </html>
