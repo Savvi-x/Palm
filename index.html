@@ -1,65 +1,18 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم الحساسات</title>
-    <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.2.0/firebase-analytics.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-        }
-        header {
-            background-color: #4CAF50;
-            color: white;
-            text-align: center;
-            padding: 10px 0;
-        }
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-        }
-        .chart-container {
-            position: relative;
-            height: 300px;
-        }
-        .sensor-data {
-            text-align: center;
-            margin: 20px 0;
-        }
-        .sensor-data p {
-            font-size: 18px;
-            margin: 5px 0;
-        }
-        canvas {
-            margin-top: 20px;
-        }
-    </style>
+    <title>Firebase Sensors Data</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database.js"></script>
 </head>
 <body>
-    <header>
-        <h1>لوحة تحكم الحساسات</h1>
-    </header>
-    <div class="container">
-        <div class="sensor-data">
-            <p>درجة الحرارة: <span id="temperature">--</span>°C</p>
-            <p>الرطوبة: <span id="humidity">---</span>%</p>
-            <p>الإضاءة: <span id="ldr">---</span>%</p>
-            <p>رطوبة التربة: <span id="soil">---</span>%</p>
-        </div>
-        <div class="chart-container">
-            <canvas id="sensorChart"></canvas>
-        </div>
-    </div>
+    <h1>Sensor Data</h1>
+    <p>Humidity: <span id="humidity"></span></p>
+    <p>Temperature: <span id="temperature"></span></p>
+    <p>Soil: <span id="soil"></span></p>
+    <p>LDR: <span id="ldr"></span></p>
 
     <script>
         // إعدادات Firebase
@@ -78,95 +31,16 @@
         const app = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // عناصر عرض البيانات
-        const temperatureEl = document.getElementById("temperature");
-        const humidityEl = document.getElementById("humidity");
-        const ldrEl = document.getElementById("ldr");
-        const soilEl = document.getElementById("soil");
-
-        const labels = [];
-        const temperatureData = [];
-        const humidityData = [];
-        const ldrData = [];
-        const soilData = [];
-
-        const ctx = document.getElementById("sensorChart").getContext("2d");
-        const sensorChart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: "درجة الحرارة",
-                        data: temperatureData,
-                        borderColor: "red",
-                        fill: false,
-                    },
-                    {
-                        label: "الرطوبة",
-                        data: humidityData,
-                        borderColor: "blue",
-                        fill: false,
-                    },
-                    {
-                        label: "الإضاءة",
-                        data: ldrData,
-                        borderColor: "yellow",
-                        fill: false,
-                    },
-                    {
-                        label: "رطوبة التربة",
-                        data: soilData,
-                        borderColor: "green",
-                        fill: false,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: "الوقت",
-                        },
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: "القيم",
-                        },
-                    },
-                },
-            },
-        });
-
-        // جلب البيانات من Firebase وتحديث الصفحة
+        // مرجع إلى بيانات المستشعرات
         const sensorsRef = database.ref("sensors");
+
+        // قراءة البيانات
         sensorsRef.on("value", (snapshot) => {
-            const data = snapshot.val();
-            const now = new Date().toLocaleTimeString();
-
-            labels.push(now);
-            temperatureData.push(data.temperature);
-            humidityData.push(data.humidity);
-            ldrData.push(data.ldr);
-            soilData.push(data.soil);
-
-            if (labels.length > 10) {
-                labels.shift();
-                temperatureData.shift();
-                humidityData.shift();
-                ldrData.shift();
-                soilData.shift();
-            }
-
-            sensorChart.update();
-
-            temperatureEl.textContent = data.temperature;
-            humidityEl.textContent = data.humidity;
-            ldrEl.textContent = data.ldr;
-            soilEl.textContent = data.soil;
+            const data = snapshot.val(); // الحصول على جميع القيم
+            document.getElementById("humidity").textContent = data.humidity;
+            document.getElementById("temperature").textContent = data.temperature;
+            document.getElementById("soil").textContent = data.soil;
+            document.getElementById("ldr").textContent = data.ldr;
         });
     </script>
 </body>
