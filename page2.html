@@ -93,19 +93,19 @@
         async function init() {
             const modelURL = URL + "model.json";
             const metadataURL = URL + "metadata.json";
-
+        
             // تحميل النموذج
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
-
-            // إعداد الكاميرا
-            const flip = true;
-            webcam = new tmImage.Webcam(300, 300, flip);
-            await webcam.setup();
+        
+            // إعداد الكاميرا الخلفية
+            const flip = false; // لا نحتاج إلى قلب الصورة عند استخدام الكاميرا الخلفية
+            webcam = new tmImage.Webcam(300, 300, flip); 
+            await webcam.setup({ facingMode: "environment" }); // الكاميرا الخلفية
             await webcam.play();
             document.getElementById("webcam-container").appendChild(webcam.canvas);
             window.requestAnimationFrame(loop);
-
+        
             // إعداد الحاوية لعرض النتائج
             labelContainer = document.getElementById("label-container");
             labelContainer.innerHTML = "";
