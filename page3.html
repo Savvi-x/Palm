@@ -100,7 +100,7 @@
         
             // إعداد الكاميرا الخلفية
             const flip = false; // لا نحتاج إلى قلب الصورة عند استخدام الكاميرا الخلفية
-            webcam = new tmImage.Webcam(500, 300, flip); 
+            webcam = new tmImage.Webcam(300, 300, flip); 
             await webcam.setup({ facingMode: "environment" }); // الكاميرا الخلفية
             await webcam.play();
             document.getElementById("webcam-container").appendChild(webcam.canvas);
