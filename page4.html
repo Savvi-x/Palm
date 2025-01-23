@@ -155,7 +155,7 @@
             const arabicLabel = arabicLabels[topPrediction.className] || "غير معروف";
             const recommendation = recommendations[arabicLabel] || "لا توجد توصيات حالياً.";
 
-            labelContainer.innerHTML = `<p>النبتة: ${arabicLabel}</p><p>الدقة: ${(topPrediction.probability * 100).toFixed(2)}%</p>`;
+            labelContainer.innerHTML = `<p>نوع النخيل: ${arabicLabel}</p><p>الدقة: ${(topPrediction.probability * 100).toFixed(2)}%</p>`;
             document.getElementById("recommendation").innerHTML = `<strong>التحليل:</strong><br>${recommendation}`;
         }
     </script>
